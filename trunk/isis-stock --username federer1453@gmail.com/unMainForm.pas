@@ -12,19 +12,25 @@ type
   TMainForm = class(TForm)
     MainConn: TZConnection;
     tblCategorias: TZTable;
-    pnCategorias: TPanel;
     edtCodigo: TEdit;
     edtDescricao: TEdit;
     btnPesquisar: TButton;
     DBGrid1: TDBGrid;
     qryProdutos: TZQuery;
     dsProdutos: TDataSource;
+    cmbCategorias: TComboBox;
+    Label1: TLabel;
+    Label2: TLabel;
+    Label3: TLabel;
+    procedure FormCreate(Sender: TObject);
+    procedure cmbCategoriasChange(Sender: TObject);
   private
     { Private declarations }
     function LoadCategories:Integer;
   public
     { Public declarations }
     function OpenConnection:Integer;
+    function CloseTable(Table:TZAbstractDataset):Integer;
     function GetConnection:TZConnection;
   end;
 
@@ -37,6 +43,12 @@ implementation
 
 { TMainForm }
 
+function TMainForm.CloseTable(Table: TZAbstractDataset): Integer;
+begin
+   Table.Close;
+   MainConn.Disconnect;
+end;
+
 function TMainForm.GetConnection:TZConnection;
 begin
    try
@@ -46,27 +58,25 @@ begin
    end;
 end;
 
-function TMainForm.LoadCategories: Integer;
-var
-   iLeft:Integer;
-   iCount:Integer;
+function TMainForm.LoadCategories:Integer;
 begin
    if(OpenConnection=0)then
    begin
-      iLeft:=0;
-      iCount:=Floor(1000/tblCategorias.RecordCount);
       tblCategorias.Open;
       tblCategorias.First;
 
       while not tblCategorias.Eof do
       begin
-         with TSpeedButton.Create(nil)do
-         begin
-            Parent:=pnCategorias;
-            SetBounds(iLeft,0,);
-         end;
+         cmbCategorias.Items.Add(tblCategorias.FieldByName('descricao').AsString);
+         tblCategorias.Next;
       end;
-   end;
+
+      cmbCategorias.ItemIndex:=0;
+      tblCategorias.Close;
+      Result:=0;
+   end
+   else
+      Result:=-1;
 end;
 
 function TMainForm.OpenConnection: Integer;
@@ -77,6 +87,27 @@ begin
    except
       Result:=-1;
    end;
+end;
+
+procedure TMainForm.FormCreate(Sender: TObject);
+begin
+   LoadCategories;
+end;
+
+procedure TMainForm.cmbCategoriasChange(Sender: TObject);
+var
+   IdCategory:Integer;
+begin
+   OpenConnection;
+   IdCategory:=cmbCategorias.ItemIndex+1;
+   qryProdutos.Close;
+   qryProdutos.SQL.Clear;
+   qryProdutos.SQL.Add(Format('select * from produtos where id_categoria=%d',[IdCategory]));
+   qryProdutos.Open;
+
+   edtCodigo.Text:=qryProdutos.FieldByName('codigo').AsString;
+   edtDescricao.Text:=qryProdutos.FieldByName('descricao').AsString;
+   edtDescricao.SetFocus;
 end;
 
 end.
