@@ -1,0 +1,2 @@
+CREATE TABLE lotes(id_lote integer not null,codigo varchar(20),data_entrega date, data_validade date);
+CREATE TABLE produtos(id_produto integer not null,id_lote integer,codigo varchar(20),descricao varchar(255),valor_unitario float);

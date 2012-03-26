@@ -1,0 +1,35 @@
+unit unMainForm;
+
+interface
+
+uses
+  Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  Dialogs, DBClient, Provider, DB, Grids, DBGrids, ZDataset, StdCtrls,
+  ExtCtrls, ZAbstractRODataset, ZAbstractDataset, ZAbstractTable,
+  ZConnection;
+
+type
+  TMainForm = class(TForm)
+    MainConn: TZConnection;
+    tblCategorias: TZTable;
+    pnCategorias: TPanel;
+    edtCodigo: TEdit;
+    edtDescricao: TEdit;
+    btnPesquisar: TButton;
+    DBGrid1: TDBGrid;
+    qryProdutos: TZQuery;
+    dsProdutos: TDataSource;
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  MainForm: TMainForm;
+
+implementation
+
+{$R *.dfm}
+
+end.
