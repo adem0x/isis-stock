@@ -15,15 +15,21 @@ type
     edtCodigo: TEdit;
     edtDescricao: TEdit;
     btnPesquisar: TButton;
-    DBGrid1: TDBGrid;
     qryProdutos: TZQuery;
     dsProdutos: TDataSource;
     cmbCategorias: TComboBox;
     Label1: TLabel;
     Label2: TLabel;
     Label3: TLabel;
+    DBGrid1: TDBGrid;
     procedure FormCreate(Sender: TObject);
-    procedure cmbCategoriasChange(Sender: TObject);
+    procedure edtCodigoChange(Sender: TObject);
+    procedure DBGrid1DrawColumnCell(Sender: TObject; const Rect: TRect;
+      DataCol: Integer; Column: TColumn; State: TGridDrawState);
+    procedure edtCodigoKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure cmbCategoriasKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
   private
     { Private declarations }
     function LoadCategories:Integer;
@@ -94,20 +100,61 @@ begin
    LoadCategories;
 end;
 
-procedure TMainForm.cmbCategoriasChange(Sender: TObject);
+procedure TMainForm.edtCodigoChange(Sender: TObject);
+begin
+   qryProdutos.Close;
+   qryProdutos.SQL.Clear;
+   qryProdutos.SQL.Add(Format('select codigo,descricao,preco_unitario from produtos where %s like %s',[TEdit(Sender).Hint,QuotedStr('%'+TEdit(Sender).Text+'%')]));
+   qryProdutos.Open;
+end;
+
+procedure TMainForm.DBGrid1DrawColumnCell(Sender: TObject;
+  const Rect: TRect; DataCol: Integer; Column: TColumn;
+  State: TGridDrawState);
+var
+   R : TRect;
+begin
+   R:=Rect;
+   Dec(R.Bottom,2);
+   if Column.Field=qryProdutos.FieldByName('descricao') then
+   begin
+   if not (gdSelected in State) then
+      DBGrid1.Canvas.FillRect(Rect);
+      DBGrid1.Canvas.TextRect(R,R.Left,R.Top,qryProdutos.FieldByName('descricao').AsString);
+   end;
+
+end;
+
+procedure TMainForm.edtCodigoKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
+begin
+   case key of
+      13:
+         DBGrid1.SetFocus;
+   end;
+end;
+
+procedure TMainForm.cmbCategoriasKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
 var
    IdCategory:Integer;
 begin
-   OpenConnection;
-   IdCategory:=cmbCategorias.ItemIndex+1;
-   qryProdutos.Close;
-   qryProdutos.SQL.Clear;
-   qryProdutos.SQL.Add(Format('select * from produtos where id_categoria=%d',[IdCategory]));
-   qryProdutos.Open;
+   case key of
+      13:
+      begin
+         OpenConnection;
+         IdCategory:=cmbCategorias.ItemIndex+1;
+         qryProdutos.Close;
+         qryProdutos.SQL.Clear;
+         if(cmbCategorias.ItemIndex=0)then
+            qryProdutos.SQL.Add('select * from produtos')
+         else
+            qryProdutos.SQL.Add(Format('select * from produtos where id_categoria=%d',[IdCategory]));
 
-   edtCodigo.Text:=qryProdutos.FieldByName('codigo').AsString;
-   edtDescricao.Text:=qryProdutos.FieldByName('descricao').AsString;
-   edtDescricao.SetFocus;
+         qryProdutos.Open;
+         edtDescricao.SetFocus;
+      end;
+   end;
 end;
 
 end.
